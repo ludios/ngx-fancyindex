@@ -19,6 +19,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <stdio.h>
+#include <string.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -661,6 +663,27 @@ make_header_buf(ngx_http_request_t *r, const ngx_str_t css_href)
     return b;
 }
 
+/**
+ * https://stackoverflow.com/a/1449849
+ */
+void format_commas(int n, char *out)
+{
+    int c;
+    char buf[20];
+    char *p;
+
+    sprintf(buf, "%d", n);
+    c = 2 - strlen(buf) % 3;
+    for (p = buf; *p != 0; p++) {
+       *out++ = *p;
+       if (c == 1) {
+           *out++ = ',';
+       }
+       c = (c + 1) % 3;
+    }
+    *--out = 0;
+}
+
 
 static ngx_inline ngx_int_t
 make_content_buf(
@@ -907,7 +930,7 @@ make_content_buf(
             + ngx_sizeof_ssz("\">")
             + entry[i].name.len + entry[i].utf_len + entry[i].escape_html
             + ngx_sizeof_ssz("</a></td><td class=\"size\">")
-            + 20 /* File size */
+            + 26 /* File size with commas */
             + ngx_sizeof_ssz("</td><td class=\"date\">")    /* Date prefix */
             + ngx_sizeof_ssz("</td></tr>\n") /* Date suffix */
             + 2 /* CR LF */
@@ -1120,7 +1143,9 @@ make_content_buf(
             if (entry[i].dir) {
                 *b->last++ = '-';
             } else {
-                b->last = ngx_sprintf(b->last, "%19O", entry[i].size);
+                char comma_buf[27] = { 0 }; // 26 for 2**64 with commas, plus the NUL on the end
+                format_commas(entry[i].size, comma_buf);
+                b->last = ngx_sprintf(b->last, "%s", comma_buf);
             }
 
         } else {
