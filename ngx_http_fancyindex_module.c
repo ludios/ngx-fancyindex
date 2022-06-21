@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -666,13 +667,13 @@ make_header_buf(ngx_http_request_t *r, const ngx_str_t css_href)
 /**
  * https://stackoverflow.com/a/1449849
  */
-void format_commas(int n, char *out)
+void format_commas(uint64_t n, char *out)
 {
     int c;
     char buf[20];
     char *p;
 
-    sprintf(buf, "%d", n);
+    sprintf(buf, "%lu", n);
     c = 2 - strlen(buf) % 3;
     for (p = buf; *p != 0; p++) {
        *out++ = *p;
