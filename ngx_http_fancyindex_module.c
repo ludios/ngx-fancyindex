@@ -19,13 +19,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_log.h>
+
+/* Must come after ngx_*.h: https://trac.nginx.org/nginx/ticket/2312#comment:4  */
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
 
 #include "template.h"
 
