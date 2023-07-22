@@ -696,7 +696,6 @@ make_content_buf(
     ngx_http_fancyindex_entry_t *entry;
 
     int (*sort_cmp_func)(const void *, const void *);
-    const char  *sort_url_args = "";
 
     off_t        length;
     size_t       len, root, allocated, escape_html;
@@ -921,13 +920,12 @@ make_content_buf(
          * is stripped out:
          *
          *   <tr>
-         *     <td><a href="U[?sort]">fname</a></td>
+         *     <td><a href="U">fname</a></td>
          *     <td>size</td><td>date</td>
          *   </tr>
          */
         len += ngx_sizeof_ssz("<tr><td colspan=\"2\" class=\"link\"><a href=\"")
             + entry[i].name.len + entry[i].escape /* Escaped URL */
-            + ngx_sizeof_ssz("?C=x&amp;O=y") /* URL sorting arguments */
             + ngx_sizeof_ssz("\" title=\"")
             + entry[i].name.len + entry[i].utf_len + entry[i].escape_html
             + ngx_sizeof_ssz("\">")
@@ -964,25 +962,15 @@ make_content_buf(
             case 'M': /* Sort by mtime */
                 if (sort_descending) {
                     sort_cmp_func = ngx_http_fancyindex_cmp_entries_mtime_desc;
-                    if (alcf->default_sort != NGX_HTTP_FANCYINDEX_SORT_CRITERION_DATE_DESC)
-                        sort_url_args = "?C=M&amp;O=D";
-                }
-                else {
+                } else {
                     sort_cmp_func = ngx_http_fancyindex_cmp_entries_mtime_asc;
-                    if (alcf->default_sort != NGX_HTTP_FANCYINDEX_SORT_CRITERION_DATE)
-                        sort_url_args = "?C=M&amp;O=A";
                 }
                 break;
             case 'S': /* Sort by size */
                 if (sort_descending) {
                     sort_cmp_func = ngx_http_fancyindex_cmp_entries_size_desc;
-                    if (alcf->default_sort != NGX_HTTP_FANCYINDEX_SORT_CRITERION_SIZE_DESC)
-                        sort_url_args = "?C=S&amp;O=D";
-                }
-                else {
+                } else {
                     sort_cmp_func = ngx_http_fancyindex_cmp_entries_size_asc;
-                        if (alcf->default_sort != NGX_HTTP_FANCYINDEX_SORT_CRITERION_SIZE)
-                    sort_url_args = "?C=S&amp;O=A";
                 }
                 break;
             case 'N': /* Sort by name */
@@ -991,15 +979,10 @@ make_content_buf(
                     sort_cmp_func = alcf->case_sensitive
                         ? ngx_http_fancyindex_cmp_entries_name_cs_desc
                         : ngx_http_fancyindex_cmp_entries_name_ci_desc;
-                    if (alcf->default_sort != NGX_HTTP_FANCYINDEX_SORT_CRITERION_NAME_DESC)
-                        sort_url_args = "?C=N&amp;O=D";
-                }
-                else {
+                } else {
                     sort_cmp_func = alcf->case_sensitive
                         ? ngx_http_fancyindex_cmp_entries_name_cs_asc
                         : ngx_http_fancyindex_cmp_entries_name_ci_asc;
-                    if (alcf->default_sort != NGX_HTTP_FANCYINDEX_SORT_CRITERION_NAME)
-                        sort_url_args = "?C=N&amp;O=A";
                 }
                 break;
         }
@@ -1087,11 +1070,6 @@ make_content_buf(
         b->last = ngx_cpymem_ssz(b->last,
                                  "<tr>"
                                  "<td colspan=\"2\" class=\"link\"><a href=\"../");
-        if (*sort_url_args) {
-            b->last = ngx_cpymem(b->last,
-                                 sort_url_args,
-                                 ngx_sizeof_ssz("?C=N&amp;O=A"));
-        }
         b->last = ngx_cpymem_ssz(b->last,
                                  "\">Parent Directory</a></td>"
                                  "<td class=\"size\">-</td>"
@@ -1117,11 +1095,6 @@ make_content_buf(
 
         if (entry[i].dir) {
             *b->last++ = '/';
-            if (*sort_url_args) {
-                b->last = ngx_cpymem(b->last,
-                                     sort_url_args,
-                                     ngx_sizeof_ssz("?C=x&amp;O=y"));
-            }
         }
 
         *b->last++ = '"';
